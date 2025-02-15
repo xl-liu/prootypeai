@@ -1,11 +1,5 @@
 import { useState } from "react";
-import {
-  CloudLightning,
-  MicOff,
-  Mic,
-  Square,
-  MessageSquare,
-} from "react-feather";
+import { Mic, Square } from "react-feather";
 import Button from "./Button";
 
 function StartSessionButton({ isActivating, onClick }) {
