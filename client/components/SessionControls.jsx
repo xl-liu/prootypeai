@@ -1,6 +1,29 @@
 import { useState } from "react";
-import { CloudLightning, CloudOff, MessageSquare } from "react-feather";
+import {
+  CloudLightning,
+  MicOff,
+  Mic,
+  Square,
+  MessageSquare,
+} from "react-feather";
 import Button from "./Button";
+
+function StartSessionButton({ isActivating, onClick }) {
+  return (
+    <Button
+      onClick={onClick}
+      icon={<Mic height={64} />}
+      className={`size-40 ${
+        isActivating ? "bg-gray-600 animate-pulse" : "bg-red-600"
+      }`}
+      aria-label={isActivating ? "Starting session..." : "Start session"}
+    >
+      <span className="sr-only">
+        {isActivating ? "Starting session..." : "Start session"}
+      </span>
+    </Button>
+  );
+}
 
 function SessionStopped({ startSession }) {
   const [isActivating, setIsActivating] = useState(false);
@@ -14,13 +37,10 @@ function SessionStopped({ startSession }) {
 
   return (
     <div className="flex items-center justify-center w-full h-full">
-      <Button
+      <StartSessionButton
+        isActivating={isActivating}
         onClick={handleStartSession}
-        className={isActivating ? "bg-gray-600" : "bg-red-600"}
-        icon={<CloudLightning height={16} />}
-      >
-        {isActivating ? "starting session..." : "start session"}
-      </Button>
+      />
     </div>
   );
 }
@@ -35,6 +55,8 @@ function SessionActive({ stopSession, sendTextMessage }) {
 
   return (
     <div className="flex items-center justify-center w-full h-full gap-4">
+      {/* 
+      text input disabled for now
       <input
         onKeyDown={(e) => {
           if (e.key === "Enter" && message.trim()) {
@@ -46,21 +68,22 @@ function SessionActive({ stopSession, sendTextMessage }) {
         className="border border-gray-200 rounded-full p-4 flex-1"
         value={message}
         onChange={(e) => setMessage(e.target.value)}
-      />
-      <Button
+      />  <Button
         onClick={() => {
           if (message.trim()) {
             handleSendClientEvent();
           }
         }}
         icon={<MessageSquare height={16} />}
-        className="bg-blue-400"
+        className="bg-blue-400 size-40"
       >
         send text
-      </Button>
-      <Button onClick={stopSession} icon={<CloudOff height={16} />}>
-        disconnect
-      </Button>
+      </Button> */}
+      <Button
+        onClick={stopSession}
+        icon={<Square height={64} />}
+        className="size-40 bg-red-600"
+      ></Button>
     </div>
   );
 }

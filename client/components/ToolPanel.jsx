@@ -226,7 +226,7 @@ export default function ToolPanel({
 
   return (
     <section className="h-full w-full flex flex-col gap-4">
-      <div className="h-full bg-gray-50 rounded-md p-4">
+      <div className="h-full w-full bg-gray-50 rounded-md p-4">
         <h2 className="text-lg font-bold">Circuit Diagram </h2>
         {isSessionActive ? (
           functionCallOutput ? (

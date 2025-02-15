@@ -143,7 +143,7 @@ export default function App() {
         </div>
       </nav>
       <main className="absolute top-16 left-0 right-0 bottom-0">
-        <section className="absolute top-0 w-[380px] left-0 bottom-0 p-4 pt-0 overflow-y-auto">
+        <section className="top-0 left-0 bottom-0 p-4 pt-0 overflow-y-auto">
           <ToolPanel
             sendClientEvent={sendClientEvent}
             sendTextMessage={sendTextMessage}
