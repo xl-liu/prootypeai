@@ -45,6 +45,8 @@ def get_token(client_id, client_secret):
     except Exception:
         raise
 
+    print(token)
+
     return token
 def decodeJWT(token):
     return json.loads(
@@ -151,18 +153,19 @@ def parse_nexar_data(data, preferred_seller="DigiKey"):
 
     part_info.seller = seller['company']['name']
     part_info.price = seller['offers'][0]['prices'][0]['price']
-    part_info.link = seller['offers'][0]['clickUrl']
+    part_info.link = data['sellers'][0]['clickUrl']
     part_info.mpn = data['mpn']
     part_info.manufacturer = data['manufacturer']['name']
     part_info.shortDescription = data['shortDescription']
     
     return part_info
 
-    
 if __name__ == '__main__':
 
-    client_id = os.environ["NEXAR_CLIENT_ID"]
-    client_secret = os.environ["NEXAR_CLIENT_SECRET"]
+    # client_id = os.environ["NEXAR_CLIENT_ID"]
+    # client_secret = os.environ["NEXAR_CLIENT_SECRET"]
+    client_id = "cf70abbf-2f68-4b5e-abde-fd782a74e0cb"
+    client_secret = "ZeY4Xd8HN3FtSeTN-GvUi6PgQLzuEdHl72sx"
     nexar = NexarClient(client_id, client_secret)
     parts = ["ESP32-WROOM-32", "Adafruit PCA9685 16-Channel PWM Driver"]
     a = SearchParts(parts)

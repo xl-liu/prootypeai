@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { searchParts } from './search-parts';
 
 const sessionUpdate = {
   type: "session.update",
@@ -113,6 +114,32 @@ const sessionUpdate = {
           required: ["type", "parts"],
         },
       },
+      {
+        type: "function",
+        name: "search_parts",
+        description: `Call this function to search for electronic parts information such as pricing and manufacturer,
+          , given the part name or MPN (Manufacturer Part Number)`,
+        parameters: {
+          type: "object",
+          strict: true,
+          properties: {
+            type: {
+              type: "string",
+              enum: ["parts_search"],
+              description: "Type of search to perform",
+            },
+            parts: {
+              type: "array",
+              description: "List of parts to search for",
+              items: {
+                type: "string",
+                description: "Part name or MPN (Manufacturer Part Number)",
+              },
+            },
+          },
+          required: ["type", "parts"],
+        },
+      },
     ],
     tool_choice: "auto",
     instructions: `
@@ -181,6 +208,7 @@ function FunctionCallOutput({ functionCallOutput }) {
       </div>
     );
   }
+
   if (type === "bom_list") {
     const { parts } = data;
     return (
@@ -251,7 +279,8 @@ export default function ToolPanel({
           (output.name === "show_circuit_diagram" ||
             output.name === "show_functional_diagram" ||
             output.name === "display_questions_on_screen" ||
-            output.name === "show_bom_list")
+            output.name === "show_bom_list" ||
+            output.name === "search_parts")
         ) {
           setFunctionCallOutput(output);
           // setTimeout(() => {
@@ -266,6 +295,16 @@ export default function ToolPanel({
           //   });
           // }, 500);
         }
+        // if (output.type === "function_call") {
+        //   if (output.name === "search_parts") {
+        //     (async () => {
+        //       const results = await searchParts(JSON.parse(output.arguments));
+        //       console.log('Search results:', results);
+        //     })();
+        //   } else {
+        //     setFunctionCallOutput(output);
+        //   }
+        // }
       });
     }
   }, [events]);
