@@ -256,10 +256,9 @@ function MermaidChart({ chart, id }) {
       }
     };
 
-    if (!loading && !svg) {
-      render();
-    }
-  }, [chart, id, isMounted]);
+    // Always re-render when chart changes
+    render();
+  }, [chart, id, isMounted]); // Removed loading and svg from dependencies
 
   if (loading) {
     return <div>Loading...</div>;
