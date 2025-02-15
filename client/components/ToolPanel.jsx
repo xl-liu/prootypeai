@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { searchParts } from './search-parts';
+import Button from "./Button";
 
 const sessionUpdate = {
   type: "session.update",
@@ -159,7 +159,11 @@ You can create circuit diagrams, functional diagrams, or bill of materials.
 };
 
 function FunctionCallOutput({ functionCallOutput }) {
-  const { type, ...data } = JSON.parse(functionCallOutput.arguments);
+  const fargs =
+    typeof functionCallOutput.arguments === "string"
+      ? JSON.parse(functionCallOutput.arguments)
+      : functionCallOutput.arguments;
+  const { type, ...data } = fargs;
 
   if (type === "circuit_diagram") {
     const { tikz } = data;
@@ -257,7 +261,18 @@ export default function ToolPanel({
   events,
 }) {
   const [functionAdded, setFunctionAdded] = useState(false);
-  const [functionCallOutput, setFunctionCallOutput] = useState(null);
+  const [functionCallOutput, setFunctionCallOutput] = useState({
+    type: "function_call",
+    name: "display_questions_on_screen",
+    arguments: JSON.stringify({
+      type: "display_questions_on_screen",
+      questions: [
+        "What color options would you like for the mood lamp?",
+        "Do you need any specific brightness levels?",
+        "What power source will you be using?",
+      ],
+    }),
+  });
 
   useEffect(() => {
     if (!events || events.length === 0) return;
@@ -311,6 +326,7 @@ export default function ToolPanel({
 
   useEffect(() => {
     if (!isSessionActive) {
+      console.log("resetting function call output");
       setFunctionAdded(false);
       setFunctionCallOutput(null);
     }
@@ -340,20 +356,115 @@ export default function ToolPanel({
     </div>
   );
 
+  // Add debug controls when in development
+  const debugControls = process.env.NODE_ENV === "development" && (
+    <div className="debug-controls mt-4 flex flex-wrap gap-2">
+      <Button
+        onClick={() => {
+          setFunctionCallOutput({
+            type: "function_call",
+            name: "display_questions_on_screen",
+            arguments: JSON.stringify({
+              type: "display_questions_on_screen",
+              questions: [
+                "What color options would you like for the mood lamp?",
+                "Do you need any specific brightness levels?",
+                "What power source will you be using?",
+              ],
+            }),
+          });
+        }}
+      >
+        Debug Questions
+      </Button>
+
+      <Button
+        onClick={() => {
+          setFunctionCallOutput({
+            type: "function_call",
+            name: "show_circuit_diagram",
+            arguments: JSON.stringify({
+              type: "circuit_diagram",
+              tikz: `\\begin{circuitikz}
+              \\draw (0,0) 
+                to[battery1] (0,2)
+                to[R=$R_1$] (2,2)
+                to[LED] (2,0)
+                to[switch] (0,0);
+            \\end{circuitikz}`,
+            }),
+          });
+        }}
+      >
+        Debug Circuit
+      </Button>
+
+      <Button
+        onClick={() =>
+          setFunctionCallOutput({
+            type: "function_call",
+            name: "show_functional_diagram",
+            arguments: JSON.stringify({
+              type: "functional_diagram",
+              mermaid: `graph TD
+              A[Power Supply] --> B[Microcontroller]
+              B --> C[LED Driver]
+              C --> D[RGB LEDs]
+              B --> E[User Interface]`,
+            }),
+          })
+        }
+      >
+        Debug Functional
+      </Button>
+
+      <Button
+        onClick={() =>
+          setFunctionCallOutput({
+            type: "function_call",
+            name: "show_bom_list",
+            arguments: JSON.stringify({
+              type: "bom_list",
+              parts: [
+                {
+                  name: "Arduino Nano",
+                  quantity: 1,
+                  description: "Microcontroller board",
+                  cost: 4.99,
+                },
+                {
+                  name: "RGB LED Strip",
+                  quantity: 1,
+                  description: "WS2812B 1m 60 LED",
+                  cost: 12.99,
+                },
+                {
+                  name: "Power Supply",
+                  quantity: 1,
+                  description: "5V 2A DC Adapter",
+                  cost: 7.99,
+                },
+              ],
+            }),
+          })
+        }
+      >
+        Debug BOM
+      </Button>
+    </div>
+  );
+
   return (
     <section className="h-full w-full flex flex-col gap-4">
       <div className="h-full w-full bg-gray-50 rounded-md p-4">
         <h2 className="text-2xl font-bold">Hi! I'm Pai!</h2>
-        {isSessionActive ? (
-          functionCallOutput ? (
-            <FunctionCallOutput functionCallOutput={functionCallOutput} />
-          ) : (
-            about
-          )
+        {functionCallOutput ? (
+          <FunctionCallOutput functionCallOutput={functionCallOutput} />
         ) : (
           about
         )}
       </div>
+      {debugControls}
     </section>
   );
 }
