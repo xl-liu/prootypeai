@@ -149,6 +149,7 @@ function TikZDiagram({ tikz }) {
   const [pdfData, setPdfData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [lastRenderedTikz, setLastRenderedTikz] = useState(null);
 
   useEffect(() => {
     const fetchDiagram = async () => {
@@ -170,6 +171,7 @@ function TikZDiagram({ tikz }) {
         const { image, pdf } = data;
         setImageData(image);
         setPdfData(pdf);
+        setLastRenderedTikz(tikz);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -177,10 +179,11 @@ function TikZDiagram({ tikz }) {
       }
     };
 
-    if (!isLoading && !imageData) {
+    // Only fetch if tikz has changed from last rendered version
+    if (!isLoading && tikz !== lastRenderedTikz) {
       fetchDiagram();
     }
-  }, [tikz, imageData]);
+  }, [tikz, lastRenderedTikz]);
 
   if (isLoading) return <div>Rendering diagram...</div>;
   if (error) return <div className="text-red-500">Error: {error}</div>;
@@ -192,14 +195,6 @@ function TikZDiagram({ tikz }) {
         alt="Circuit diagram"
         className="max-w-full h-auto object-contain"
       />
-      {/* <embed
-        src={`data:application/pdf;base64,${pdfData}#toolbar=0&navpanes=0&scrollbar=0`}
-        type="application/pdf"
-        className="w-full h-96"
-      /> */}
-      <pre className="text-xs bg-gray-100 rounded-md p-2 overflow-x-auto">
-        {tikz}
-      </pre>
     </div>
   );
 }
@@ -220,6 +215,8 @@ function FunctionCallOutput({ functionCallOutput }) {
   const name = functionCallOutput.name;
   const { type, ...data } = fargs;
 
+  const raw = <></>;
+
   if (name === "show_circuit_diagram") {
     const { tikz } = data;
     return (
@@ -228,9 +225,7 @@ function FunctionCallOutput({ functionCallOutput }) {
         <div className="border rounded-md p-4">
           <TikZDiagram tikz={tikz} />
         </div>
-        <pre className="text-xs bg-gray-100 rounded-md p-2 overflow-x-auto">
-          {JSON.stringify(functionCallOutput, null, 2)}
-        </pre>
+        {/* {raw} */}
       </div>
     );
   }
@@ -245,9 +240,7 @@ function FunctionCallOutput({ functionCallOutput }) {
             {tikz}
           </pre>
         </div>
-        <pre className="text-xs bg-gray-100 rounded-md p-2 overflow-x-auto">
-          {JSON.stringify(functionCallOutput, null, 2)}
-        </pre>
+        {/* {raw} */}
       </div>
     );
   }
@@ -290,9 +283,6 @@ function FunctionCallOutput({ functionCallOutput }) {
             </tbody>
           </table>
         </div>
-        <pre className="text-xs bg-gray-100 rounded-md p-2 overflow-x-auto">
-          {JSON.stringify(functionCallOutput, null, 2)}
-        </pre>
       </div>
     );
   }
@@ -300,9 +290,7 @@ function FunctionCallOutput({ functionCallOutput }) {
   return (
     <div className="flex flex-col gap-2">
       <p className="text-red-500">Unknown function call type: {type}</p>
-      <pre className="text-xs bg-gray-100 rounded-md p-2 overflow-x-auto">
-        {JSON.stringify(functionCallOutput, null, 2)}
-      </pre>
+      {raw}
     </div>
   );
 }
@@ -380,7 +368,7 @@ export default function ToolPanel({
     if (!isSessionActive) {
       console.log("resetting function call output");
       setFunctionAdded(false);
-      setFunctionCallOutput(null);
+      // setFunctionCallOutput(null);
     }
   }, [isSessionActive]);
 
