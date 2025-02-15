@@ -233,7 +233,7 @@ function QuestionsDisplay({ questions }) {
         {questions.map((question, i) => (
           <li
             key={i}
-            className="text-3xl leading-relaxed text-gray-700 pl-8 relative before:content-['•'] before:absolute before:left-0 before:text-blue-500 before:font-bold before:text-4xl before:-top-1"
+            className="text-l leading-relaxed text-gray-700 pl-8 relative before:content-['•'] before:absolute before:left-0 before:text-blue-500 before:font-bold before:text-4xl before:-top-1"
           >
             {question}
           </li>
@@ -321,7 +321,6 @@ function FunctionCallOutput({ functionCallOutput }) {
     const { tikz } = data;
     return (
       <div className="flex flex-col gap-2">
-        <h3 className="font-bold">Circuit Diagram</h3>
         <div className="border rounded-md p-4">
           <TikZDiagram tikz={tikz} />
         </div>
@@ -334,7 +333,9 @@ function FunctionCallOutput({ functionCallOutput }) {
     const { mermaid } = data;
     return (
       <div className="flex flex-col gap-2">
-        <h3 className="font-bold">Functional Diagram</h3>
+        <h3 className="font-bold" role="heading" aria-level="3">
+          Functional Diagram
+        </h3>
         <div className="border rounded-md p-4">
           <MermaidChart chart={mermaid} id="singleton-mermaid-chart" />
         </div>
@@ -461,11 +462,12 @@ export default function ToolPanel({
 
   const about = (
     <div className="flex flex-col gap-2 text-xl">
+      <h2 className="text-2xl font-bold">Hi! I'm Pai!</h2>
       <p className="text-sm text-gray-400">
         I can create circuit diagrams, functional diagrams, or bill of
-        materials.
+        materials. <br />
+        Just ask:
       </p>
-      <p>Try</p>
       <div className="flex flex-col gap-2 max-w-md flex-wrap text-sm">
         <li className="inline-block rounded-lg bg-blue-100 border-2 border-blue-700 px-4 py-2 break-words">
           LED mood lamp with adjustable colors
@@ -578,9 +580,8 @@ export default function ToolPanel({
   return (
     <section
       id="tool-panel"
-      className="h-[calc(100vh-16rem)] w-full flex flex-col gap-4 bg-gray-50 rounded-md p-4"
+      className="h-[calc(100vh-10rem)] w-full flex flex-col gap-4 bg-gray-50 rounded-md p-4"
     >
-      <h2 className="text-2xl font-bold">Hi! I'm Pai!</h2>
       {functionCallOutput ? (
         <FunctionCallOutput functionCallOutput={functionCallOutput} />
       ) : (
