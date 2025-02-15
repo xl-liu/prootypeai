@@ -103,6 +103,32 @@ const sessionUpdate = {
       },
       {
         type: "function",
+        name: "search_parts",
+        description: `Call this function to search for electronic parts information such as pricing and manufacturer,
+          , given the part name or MPN (Manufacturer Part Number)`,
+        parameters: {
+          type: "object",
+          strict: true,
+          properties: {
+            type: {
+              type: "string",
+              enum: ["parts_search"],
+              description: "Type of search to perform",
+            },
+            parts: {
+              type: "array",
+              description: "List of parts to search for",
+              items: {
+                type: "string",
+                description: "Part name or MPN (Manufacturer Part Number)",
+              },
+            },
+          },
+          required: ["type", "parts"],
+        },
+      },
+      {
+        type: "function",
         name: "show_emoji",
         description: "Call this function to display a large emoji on screen",
         parameters: {
@@ -353,7 +379,7 @@ function FunctionCallOutput({ functionCallOutput }) {
     return <EmojiDisplay emoji={emoji} />;
   }
 
-  if (name === "show_bom_list") {
+  if (name === "bom_list") {
     const { parts } = data;
     return (
       <div className="flex flex-col gap-2">
