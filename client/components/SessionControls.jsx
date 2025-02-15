@@ -7,7 +7,7 @@ function StartSessionButton({ isActivating, onClick }) {
     <Button
       onClick={onClick}
       icon={<Mic height={64} />}
-      className={`size-40 ${
+      className={`size-20 ${
         isActivating ? "bg-gray-600 animate-pulse" : "bg-red-600"
       }`}
       aria-label={isActivating ? "Starting session..." : "Start session"}
@@ -76,7 +76,7 @@ function SessionActive({ stopSession, sendTextMessage }) {
       <Button
         onClick={stopSession}
         icon={<Square height={64} />}
-        className="size-40 bg-red-600"
+        className="size-20 bg-red-600"
       ></Button>
     </div>
   );
