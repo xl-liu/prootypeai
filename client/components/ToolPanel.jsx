@@ -89,6 +89,8 @@ const sessionUpdate = {
       },
     ],
     tool_choice: "auto",
+    instructions:
+      "You are a helpful assistant that can help with hardware design and planning. You always answer in a serious and professional tone that is appropriate for a high-level meeting, while keeping your responses concise and to the point, one or two sentences max before asking the user for more information.",
   },
 };
 
@@ -227,7 +229,7 @@ export default function ToolPanel({
   return (
     <section className="h-full w-full flex flex-col gap-4">
       <div className="h-full w-full bg-gray-50 rounded-md p-4">
-        <h2 className="text-lg font-bold">Circuit Diagram </h2>
+        <h2 className="text-lg font-bold">Hi! I'm Pai!</h2>
         {isSessionActive ? (
           functionCallOutput ? (
             <FunctionCallOutput functionCallOutput={functionCallOutput} />
@@ -249,8 +251,8 @@ export default function ToolPanel({
         ) : (
           <div>
             <p>
-              I can create circuit diagrams, functional diagrams, or bill of
-              materials.
+              I can help you plan your hardware project by creating circuit
+              diagrams, functional diagrams, or bill of materials.
             </p>
             <ul className="list-disc list-inside">
               <li>LED mood lamp with adjustable colors</li>
