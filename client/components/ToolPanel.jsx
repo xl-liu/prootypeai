@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Button from "./Button";
+import mermaid from "mermaid";
 
 const sessionUpdate = {
   type: "session.update",
@@ -58,9 +59,9 @@ const sessionUpdate = {
           type: "object",
           strict: true,
           properties: {
-            tikz: {
+            mermaid: {
               type: "string",
-              description: "TikZ code for rendering the functional diagram",
+              description: "Mermaid code for rendering the functional diagram",
             },
           },
           required: ["type", "tikz"],
@@ -207,6 +208,79 @@ function TikZDiagram2({ tikz }) {
   return <script type="text/tikz">{tikz}</script>;
 }
 
+function QuestionsDisplay({ questions }) {
+  return (
+    <div className="flex flex-col gap-6">
+      <ul className="space-y-8">
+        {questions.map((question, i) => (
+          <li
+            key={i}
+            className="text-3xl leading-relaxed text-gray-700 pl-8 relative before:content-['•'] before:absolute before:left-0 before:text-blue-500 before:font-bold before:text-4xl before:-top-1"
+          >
+            {question}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+// Initialize mermaid. We disable startOnLoad since we'll trigger rendering manually.
+mermaid.initialize({ startOnLoad: false });
+
+function MermaidChart({ chart, id }) {
+  const [loading, setLoading] = useState(false);
+  const [svg, setSvg] = useState(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Track mounting
+  useEffect(() => {
+    setIsMounted(true);
+    return () => setIsMounted(false);
+  }, []);
+
+  // Handle rendering once mounted
+  useEffect(() => {
+    const render = async () => {
+      if (!isMounted) return;
+      setLoading(true);
+
+      try {
+        console.log("attempting to render mermaid", id, chart);
+        const type = mermaid.detectType(chart);
+        console.log("mermaid type", type);
+        const { svg } = await mermaid.render(id, chart);
+        if (isMounted) {
+          // Check if still mounted before updating state
+          setSvg(svg);
+        }
+      } catch (error) {
+        console.error("Failed to render mermaid:", error);
+      } finally {
+        if (isMounted) {
+          // Check if still mounted before updating state
+          setLoading(false);
+        }
+      }
+    };
+
+    if (!loading && !svg) {
+      render();
+    }
+  }, [chart, id, isMounted]);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  return (
+    <div
+      dangerouslySetInnerHTML={{ __html: svg || "" }}
+      className="relative flex items-center justify-center w-full h-full [&_svg]:w-auto [&_svg]:h-auto [&_svg]:max-w-full [&_svg]:max-h-full overflow-y-scroll"
+    />
+  );
+}
+
 function FunctionCallOutput({ functionCallOutput }) {
   const fargs =
     typeof functionCallOutput.arguments === "string"
@@ -231,32 +305,21 @@ function FunctionCallOutput({ functionCallOutput }) {
   }
 
   if (name === "show_functional_diagram") {
-    const { tikz } = data;
+    const { mermaid } = data;
     return (
       <div className="flex flex-col gap-2">
         <h3 className="font-bold">Functional Diagram</h3>
         <div className="border rounded-md p-4">
-          <pre className="text-xs bg-gray-100 rounded-md p-2 overflow-x-auto">
-            {tikz}
-          </pre>
+          <MermaidChart chart={mermaid} id="singleton-mermaid-chart" />
         </div>
-        {/* {raw} */}
+        {raw}
       </div>
     );
   }
 
   if (name === "display_questions_on_screen") {
     const { questions } = data;
-    return (
-      <div className="flex flex-col gap-2">
-        <h3 className="font-bold">Clarifying Questions</h3>
-        <ul className="list-disc list-inside">
-          {questions.map((question, i) => (
-            <li key={i}>{question}</li>
-          ))}
-        </ul>
-      </div>
-    );
+    return <QuestionsDisplay questions={questions} />;
   }
   if (name === "show_bom_list") {
     const { parts } = data;
@@ -301,18 +364,7 @@ export default function ToolPanel({
   events,
 }) {
   const [functionAdded, setFunctionAdded] = useState(false);
-  const [functionCallOutput, setFunctionCallOutput] = useState({
-    type: "function_call",
-    name: "display_questions_on_screen",
-    arguments: JSON.stringify({
-      type: "display_questions_on_screen",
-      questions: [
-        "What color options would you like for the mood lamp?",
-        "Do you need any specific brightness levels?",
-        "What power source will you be using?",
-      ],
-    }),
-  });
+  const [functionCallOutput, setFunctionCallOutput] = useState();
 
   useEffect(() => {
     if (!events || events.length === 0) return;
@@ -338,17 +390,19 @@ export default function ToolPanel({
             output.name === "search_parts")
         ) {
           setFunctionCallOutput(output);
-          // setTimeout(() => {
-          //   sendClientEvent({
-          //     type: "response.create",
-          //     response: {
-          //       instructions: `
-          //       ask for feedback about the color palette - don't repeat
-          //       the colors, just ask if they like the colors.
-          //     `,
-          //     },
-          //   });
-          // }, 500);
+          // Make sure model responds when clarifying questions are displayed
+          if (output.name === "display_questions_on_screen") {
+            setTimeout(() => {
+              sendClientEvent({
+                type: "response.create",
+                response: {
+                  instructions: `
+                "Start talking to the user about the questions you just displayed.
+              `,
+                },
+              });
+            }, 500);
+          }
         }
         // if (output.type === "function_call") {
         //   if (output.name === "search_parts") {
@@ -489,15 +543,16 @@ export default function ToolPanel({
   );
 
   return (
-    <section className="h-full w-full flex flex-col gap-4">
-      <div className="h-full w-full bg-gray-50 rounded-md p-4">
-        <h2 className="text-2xl font-bold">Hi! I'm Pai!</h2>
-        {functionCallOutput ? (
-          <FunctionCallOutput functionCallOutput={functionCallOutput} />
-        ) : (
-          about
-        )}
-      </div>
+    <section
+      id="tool-panel"
+      className="h-[calc(100vh-16rem)] w-full flex flex-col gap-4 bg-gray-50 rounded-md p-4"
+    >
+      <h2 className="text-2xl font-bold">Hi! I'm Pai!</h2>
+      {functionCallOutput ? (
+        <FunctionCallOutput functionCallOutput={functionCallOutput} />
+      ) : (
+        about
+      )}
       {debugControls}
     </section>
   );

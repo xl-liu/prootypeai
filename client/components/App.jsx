@@ -142,8 +142,8 @@ export default function App() {
           </button>
         </div>
       </nav>
-      <main className="absolute top-16 left-0 right-0 bottom-0">
-        <section className="top-0 left-0 bottom-0 p-4 pt-0 overflow-y-auto">
+      <main className="absolute top-16 left-0 right-0 bottom-0 overflow-y-clip">
+        <section className="top-0 left-0 bottom-40 p-4 pt-0 overflow-y-auto">
           <ToolPanel
             sendClientEvent={sendClientEvent}
             sendTextMessage={sendTextMessage}
@@ -152,21 +152,21 @@ export default function App() {
           />
         </section>
         {isDebugVisible && (
-          <section className="absolute top-0 right-0 bottom-32 px-4 overflow-y-auto">
+          <section className="absolute top-0 right-0 bottom-48 px-4 overflow-y-auto">
             <EventLog events={events} />
           </section>
         )}
-        <section className="absolute h-32 left-0 right-0 bottom-0 p-4">
-          <SessionControls
-            startSession={startSession}
-            stopSession={stopSession}
-            sendClientEvent={sendClientEvent}
-            sendTextMessage={sendTextMessage}
-            events={events}
-            isSessionActive={isSessionActive}
-          />
-        </section>
       </main>
+      <nav className="absolute h-48 left-0 right-0 bottom-0 p-4">
+        <SessionControls
+          startSession={startSession}
+          stopSession={stopSession}
+          sendClientEvent={sendClientEvent}
+          sendTextMessage={sendTextMessage}
+          events={events}
+          isSessionActive={isSessionActive}
+        />
+      </nav>
     </>
   );
 }
