@@ -277,41 +277,42 @@ export default function ToolPanel({
     }
   }, [isSessionActive]);
 
+  const about = (
+    <div className="flex flex-col gap-2 text-xl">
+      <p className="text-sm text-gray-400">
+        I can create circuit diagrams, functional diagrams, or bill of
+        materials.
+      </p>
+      <p>Try</p>
+      <div className="flex flex-col gap-2 max-w-md flex-wrap text-sm">
+        <li className="inline-block rounded-lg bg-blue-100 border-2 border-blue-700 px-4 py-2 break-words">
+          LED mood lamp with adjustable colors
+        </li>
+        <li className="inline-block rounded-lg bg-green-100 border-2 border-green-700 px-4 py-2 break-words">
+          Arduino-based temperature monitor
+        </li>
+        <li className="inline-block rounded-lg bg-purple-100 border-2 border-purple-700 px-4 py-2 break-words">
+          Simple FM radio receiver
+        </li>
+        <li className="inline-block rounded-lg bg-orange-100 border-2 border-orange-700 px-4 py-2 break-words">
+          USB power bank with voltage regulation
+        </li>
+      </div>
+    </div>
+  );
+
   return (
     <section className="h-full w-full flex flex-col gap-4">
       <div className="h-full w-full bg-gray-50 rounded-md p-4">
-        <h2 className="text-lg font-bold">Hi! I'm Pai!</h2>
+        <h2 className="text-2xl font-bold">Hi! I'm Pai!</h2>
         {isSessionActive ? (
           functionCallOutput ? (
             <FunctionCallOutput functionCallOutput={functionCallOutput} />
           ) : (
-            <div className="flex flex-col gap-2">
-              <p>Ask about creating your hardware project...</p>
-              <p>
-                I can create circuit diagrams, functional diagrams, or bill of
-                materials.
-              </p>
-              <ul className="list-disc list-inside">
-                <li>LED mood lamp with adjustable colors</li>
-                <li>Arduino-based temperature monitor</li>
-                <li>Simple FM radio receiver</li>
-                <li>USB power bank with voltage regulation</li>
-              </ul>
-            </div>
+            about
           )
         ) : (
-          <div>
-            <p>
-              I can help you plan your hardware project by creating circuit
-              diagrams, functional diagrams, or bill of materials.
-            </p>
-            <ul className="list-disc list-inside">
-              <li>LED mood lamp with adjustable colors</li>
-              <li>Arduino-based temperature monitor</li>
-              <li>Simple FM radio receiver</li>
-              <li>USB power bank with voltage regulation</li>
-            </ul>
-          </div>
+          about
         )}
       </div>
     </section>
