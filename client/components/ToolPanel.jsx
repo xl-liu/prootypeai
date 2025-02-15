@@ -6,6 +6,32 @@ const sessionUpdate = {
     tools: [
       {
         type: "function",
+        name: "display_questions_on_screen",
+        description:
+          "You must call this function before asking the user clarifying questions. This allows the user to see them on screen and acts as a visual aid to help them stay oriented. You should still ask them the questions as audio, but call this first",
+        parameters: {
+          type: "object",
+          strict: true,
+          properties: {
+            type: {
+              type: "string",
+              enum: ["display_questions_on_screen"],
+              description: "Type of questions to ask",
+            },
+            questions: {
+              type: "array",
+              description: "List of questions to ask",
+              items: {
+                type: "string",
+                description: "Summary of the question to ask, just a few words",
+              },
+            },
+          },
+          required: ["type", "questions"],
+        },
+      },
+      {
+        type: "function",
         name: "show_circuit_diagram",
         description:
           "Call this function to display a circuit diagram using TikZ notation",
@@ -89,8 +115,19 @@ const sessionUpdate = {
       },
     ],
     tool_choice: "auto",
-    instructions:
-      "You are a helpful assistant that can help with hardware design and planning. You always answer in a serious and professional tone that is appropriate for a high-level meeting, while keeping your responses concise and to the point, one or two sentences max before asking the user for more information.",
+    instructions: `
+You are a helpful assistant that can help with hardware design and planning. You always answer in a serious and professional tone that is appropriate for a high-level meeting, while keeping your responses concise and to the point, one or two sentences max before asking the user for more information.
+
+Generally, the conversation will proceed as follows:
+0. User will describe their project to you.
+1. Then you need to call the "display_questions_on_screen" function to display a couple of clarifying questions on screen to help guide the conversation.
+2. Create a block digaram of the whole project to get user's feedback.
+3. Iterate with the user to refine the block diagram until they're happy with it.
+4. Work with the user to define the circuit diagram for each functional block in the block diagram to ensure functionality.
+5. Once the user is happy with the circuit diagrams, create a bill of materials for the project.
+
+You can create circuit diagrams, functional diagrams, or bill of materials.
+    `,
   },
 };
 
@@ -115,7 +152,7 @@ function FunctionCallOutput({ functionCallOutput }) {
   }
 
   if (type === "functional_diagram") {
-    const { blocks, flows } = data;
+    const { mermaid } = data;
     return (
       <div className="flex flex-col gap-2">
         <h3 className="font-bold">Functional Diagram</h3>
@@ -131,6 +168,19 @@ function FunctionCallOutput({ functionCallOutput }) {
     );
   }
 
+  if (type === "display_questions_on_screen") {
+    const { questions } = data;
+    return (
+      <div className="flex flex-col gap-2">
+        <h3 className="font-bold">Clarifying Questions</h3>
+        <ul className="list-disc list-inside">
+          {questions.map((question, i) => (
+            <li key={i}>{question}</li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
   if (type === "bom_list") {
     const { parts } = data;
     return (
@@ -200,6 +250,7 @@ export default function ToolPanel({
           output.type === "function_call" &&
           (output.name === "show_circuit_diagram" ||
             output.name === "show_functional_diagram" ||
+            output.name === "display_questions_on_screen" ||
             output.name === "show_bom_list")
         ) {
           setFunctionCallOutput(output);
