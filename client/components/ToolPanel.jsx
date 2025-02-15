@@ -40,14 +40,10 @@ const sessionUpdate = {
           type: "object",
           strict: true,
           properties: {
-            type: {
-              type: "string",
-              enum: ["circuit_diagram"],
-              description: "Type of diagram to display",
-            },
             tikz: {
               type: "string",
-              description: "TikZ code for rendering the circuit diagram",
+              description:
+                "TikZ code for rendering the circuit diagram, will be wrapped in documentclass and \\begin{document}\n\nFor example:\n\\begin{circuitikz}[american voltages]\n\\draw\n  (0,0) to [short, *-] (6,0)\n  to [V, l_=$\\mathrm{j}{\\omega}_m \\underline{\\psi}^s_R$] (6,2) \n  to [R, l_=$R_R$] (6,4) \n  to [short, i_=$\\underline{i}^s_R$] (5,4) \n  (0,0) to [open, v^>=$\\underline{u}^s_s$] (0,4) \n  to [short, *- ,i=$\\underline{i}^s_s$] (1,4) \n  to [R, l=$R_s$] (3,4)\n  to [L, l=$L_{\\sigma}$] (5,4) \n  to [short, i_=$\\underline{i}^s_M$] (5,3) \n  to [L, l_=$L_M$] (5,0); \n\\end{circuitikz}\n",
             },
           },
           required: ["type", "tikz"],
@@ -62,17 +58,12 @@ const sessionUpdate = {
           type: "object",
           strict: true,
           properties: {
-            type: {
+            tikz: {
               type: "string",
-              enum: ["functional_diagram"],
-              description: "Type of diagram to display",
-            },
-            mermaid: {
-              type: "string",
-              description: "Mermaid code for rendering the functional diagram",
+              description: "TikZ code for rendering the functional diagram",
             },
           },
-          required: ["type", "mermaid"],
+          required: ["type", "tikz"],
         },
       },
       {
@@ -83,11 +74,6 @@ const sessionUpdate = {
           type: "object",
           strict: true,
           properties: {
-            type: {
-              type: "string",
-              enum: ["bom_list"],
-              description: "Type of list to display",
-            },
             parts: {
               type: "array",
               description: "List of parts in the BOM",
@@ -158,18 +144,102 @@ You can create circuit diagrams, functional diagrams, or bill of materials.
   },
 };
 
+function TikZDiagram({ tikz }) {
+  const [imageData, setImageData] = useState(null);
+  const [pdfData, setPdfData] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchDiagram = async () => {
+      try {
+        console.log("rendering tikz", tikz);
+        setIsLoading(true);
+        const response = await fetch(`/render`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ code: tikz }),
+        });
+        if (!response.ok) {
+          console.error("Failed to render diagram", response);
+          throw new Error("Failed to render diagram");
+        }
+        const data = await response.json();
+        const { image, pdf } = data;
+        setImageData(image);
+        setPdfData(pdf);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (!isLoading && !imageData) {
+      fetchDiagram();
+    }
+  }, [tikz, imageData]);
+
+  if (isLoading) return <div>Rendering diagram...</div>;
+  if (error) return <div className="text-red-500">Error: {error}</div>;
+
+  return (
+    <div className="flex flex-col gap-2">
+      <img
+        src={`data:image/png;base64,${imageData}`}
+        alt="Circuit diagram"
+        className="max-w-full h-auto object-contain"
+      />
+      {/* <embed
+        src={`data:application/pdf;base64,${pdfData}#toolbar=0&navpanes=0&scrollbar=0`}
+        type="application/pdf"
+        className="w-full h-96"
+      /> */}
+      <pre className="text-xs bg-gray-100 rounded-md p-2 overflow-x-auto">
+        {tikz}
+      </pre>
+    </div>
+  );
+}
+
+function TikZDiagram2({ tikz }) {
+  // return <script type="text/tikz">{tikz}</script>;
+
+  tikz =
+    "\\documentclass{article}\n\\usepackage{circuitikz}\n\\begin{document}\n\\begin{center}\n\\begin{circuitikz}[american voltages]\n\\draw\n  (0,0) to [short, *-] (6,0)\n  to [V, l_=$\\mathrm{j}{\\omega}_m \\underline{\\psi}^s_R$] (6,2) \n  to [R, l_=$R_R$] (6,4) \n  to [short, i_=$\\underline{i}^s_R$] (5,4) \n  (0,0) to [open, v^>=$\\underline{u}^s_s$] (0,4) \n  to [short, *- ,i=$\\underline{i}^s_s$] (1,4) \n  to [R, l=$R_s$] (3,4)\n  to [L, l=$L_{\\sigma}$] (5,4) \n  to [short, i_=$\\underline{i}^s_M$] (5,3) \n  to [L, l_=$L_M$] (5,0); \n\\end{circuitikz}\n\\end{center}\n\\end{document}\n";
+  return <script type="text/tikz">{tikz}</script>;
+}
+
 function FunctionCallOutput({ functionCallOutput }) {
   const fargs =
     typeof functionCallOutput.arguments === "string"
       ? JSON.parse(functionCallOutput.arguments)
       : functionCallOutput.arguments;
+  const name = functionCallOutput.name;
   const { type, ...data } = fargs;
 
-  if (type === "circuit_diagram") {
+  if (name === "show_circuit_diagram") {
     const { tikz } = data;
     return (
       <div className="flex flex-col gap-2">
         <h3 className="font-bold">Circuit Diagram</h3>
+        <div className="border rounded-md p-4">
+          <TikZDiagram tikz={tikz} />
+        </div>
+        <pre className="text-xs bg-gray-100 rounded-md p-2 overflow-x-auto">
+          {JSON.stringify(functionCallOutput, null, 2)}
+        </pre>
+      </div>
+    );
+  }
+
+  if (name === "show_functional_diagram") {
+    const { tikz } = data;
+    return (
+      <div className="flex flex-col gap-2">
+        <h3 className="font-bold">Functional Diagram</h3>
         <div className="border rounded-md p-4">
           <pre className="text-xs bg-gray-100 rounded-md p-2 overflow-x-auto">
             {tikz}
@@ -182,24 +252,7 @@ function FunctionCallOutput({ functionCallOutput }) {
     );
   }
 
-  if (type === "functional_diagram") {
-    const { mermaid } = data;
-    return (
-      <div className="flex flex-col gap-2">
-        <h3 className="font-bold">Functional Diagram</h3>
-        <div className="border rounded-md p-4">
-          <pre className="text-xs bg-gray-100 rounded-md p-2 overflow-x-auto">
-            {mermaid}
-          </pre>
-        </div>
-        <pre className="text-xs bg-gray-100 rounded-md p-2 overflow-x-auto">
-          {JSON.stringify(functionCallOutput, null, 2)}
-        </pre>
-      </div>
-    );
-  }
-
-  if (type === "display_questions_on_screen") {
+  if (name === "display_questions_on_screen") {
     const { questions } = data;
     return (
       <div className="flex flex-col gap-2">
@@ -212,8 +265,7 @@ function FunctionCallOutput({ functionCallOutput }) {
       </div>
     );
   }
-
-  if (type === "bom_list") {
+  if (name === "show_bom_list") {
     const { parts } = data;
     return (
       <div className="flex flex-col gap-2">
@@ -385,13 +437,7 @@ export default function ToolPanel({
             name: "show_circuit_diagram",
             arguments: JSON.stringify({
               type: "circuit_diagram",
-              tikz: `\\begin{circuitikz}
-              \\draw (0,0) 
-                to[battery1] (0,2)
-                to[R=$R_1$] (2,2)
-                to[LED] (2,0)
-                to[switch] (0,0);
-            \\end{circuitikz}`,
+              tikz: "\\begin{center}\n\\begin{circuitikz}[american voltages]\n\\draw\n  (0,0) to [short, *-] (6,0)\n  to [V, l_=$\\mathrm{j}{\\omega}_m \\underline{\\psi}^s_R$] (6,2) \n  to [R, l_=$R_R$] (6,4) \n  to [short, i_=$\\underline{i}^s_R$] (5,4) \n  (0,0) to [open, v^>=$\\underline{u}^s_s$] (0,4) \n  to [short, *- ,i=$\\underline{i}^s_s$] (1,4) \n  to [R, l=$R_s$] (3,4)\n  to [L, l=$L_{\\sigma}$] (5,4) \n  to [short, i_=$\\underline{i}^s_M$] (5,3) \n  to [L, l_=$L_M$] (5,0); \n\\end{circuitikz}\n\\end{center}",
             }),
           });
         }}

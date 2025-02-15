@@ -1,11 +1,15 @@
 import express from "express";
 import fs from "fs";
+import { exec as execCallback } from "child_process";
 import { createServer as createViteServer } from "vite";
 import "dotenv/config";
 
 const app = express();
 const port = process.env.PORT || 3001;
 const apiKey = process.env.OPENAI_API_KEY;
+
+// Add body parser middleware
+app.use(express.json());
 
 // get token for nexar api
 const PROD_TOKEN_URL = "https://identity.nexar.com/connect/token";
@@ -50,6 +54,58 @@ const vite = await createViteServer({
   appType: "custom",
 });
 app.use(vite.middlewares);
+
+app.post("/render", async (req, res) => {
+  try {
+    const { code } = req.body;
+
+    // Create temp directory and files
+    // Create temp directory if it doesn't exist
+    if (!fs.existsSync("./temp")) {
+      fs.mkdirSync("./temp");
+    }
+    const tmpdir = fs.mkdtempSync("./temp/circuit-");
+    const texPath = `${tmpdir}/circuit.tex`;
+    const pdfPath = `${tmpdir}/circuit.pdf`;
+    const pngPath = `${tmpdir}/circuit.png`;
+
+    // Wrap the circuit code in a standalone environment
+    const wrappedCode = `\\documentclass[preview,border=1pt]{standalone}
+\\usepackage{circuitikz}
+\\begin{document}
+${code}
+\\end{document}`;
+
+    // Write LaTeX file
+    fs.writeFileSync(texPath, wrappedCode);
+
+    // Compile LaTeX to PDF
+    await new Promise((resolve, reject) => {
+      execCallback(`cd ${tmpdir} && pdflatex circuit.tex`, (error) => {
+        if (error) reject(error);
+        else resolve();
+      });
+    });
+    // Convert PDF to PNG
+    await new Promise((resolve, reject) => {
+      execCallback(`convert -density 300 ${pdfPath} ${pngPath}`, (error) => {
+        if (error) reject(error);
+        else resolve();
+      });
+    });
+
+    // Read PNG and convert to base64
+    const imageData = fs.readFileSync(pngPath, "base64");
+    const pdfData = fs.readFileSync(pdfPath, "base64");
+    // Cleanup temp directory
+    fs.rmSync(tmpdir, { recursive: true, force: true });
+
+    res.json({ image: imageData, pdf: pdfData });
+  } catch (error) {
+    console.error("Diagram generation error:", error);
+    res.status(500).json({ error: "Failed to generate diagram" });
+  }
+});
 
 // API route for token generation
 app.get("/token", async (req, res) => {
