@@ -1,0 +1,3 @@
+[submodule "nexar-examples-py"]
+	path = nexar-examples-py
+	url = https://github.com/NexarDeveloper/nexar-examples-py.git
