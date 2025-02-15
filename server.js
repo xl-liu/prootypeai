@@ -4,8 +4,45 @@ import { createServer as createViteServer } from "vite";
 import "dotenv/config";
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3001;
 const apiKey = process.env.OPENAI_API_KEY;
+
+// get token for nexar api
+const PROD_TOKEN_URL = "https://identity.nexar.com/connect/token";
+const clientId = process.env.NEXAR_CLIENT_ID;
+const clientSecret = process.env.NEXAR_CLIENT_SECRET;
+const NEXAR_URL = "https://api.nexar.com/graphql"
+
+async function getToken(clientId, clientSecret) {
+  if (!clientId || !clientSecret) {
+      throw new Error("clientId and/or clientSecret are empty");
+  }
+
+  try {
+      const response = await fetch(PROD_TOKEN_URL, {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: new URLSearchParams({
+              grant_type: 'client_credentials',
+              client_id: clientId,
+              client_secret: clientSecret
+          }),
+          redirect: 'manual'
+      });
+
+      const token = await response.json();
+      return token;
+  } catch (error) {
+      throw error;
+  }
+}
+
+const TOKEN = await getToken(clientId, clientSecret);
+
+export const getNexarToken = () => TOKEN;
+export { getToken };
 
 // Configure Vite middleware for React client
 const vite = await createViteServer({

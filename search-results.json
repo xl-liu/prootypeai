@@ -1,0 +1,30 @@
+[
+  {
+    "name": "LM358MX/NOPB",
+    "quantity": 1,
+    "description": "Texas Instruments - IC OPAMP GP 2 CIRCUIT 8SOIC General Purpose Amplifier 2 Circuit 8-SOIC",
+    "cost": 0.82,
+    "link": "https://octopart.com/opatz8j6/a1?t=ZFkEV5e4JjTNKwYqV-mX2W2wKR_IkvGDGLx8OgyrAPejZGqgLxZOMakKLMZxh2prRm-0Dvl9eL9nCkLcPTCb69N6yLVKX6ir_vodSRLuO4OMFR9lHURmbj2TzsERxqnJkhKCew35WjK7HLBVhFFEQTyP4bQVp0HGOiMtNJPV4ZoYtJDrGeaUtw2WyTB4FcG_lgr2TFRTqpUbsvH9mc29rorWQa-otP-PbwC93eFPACQWpDx3VVdvwLyfQDCR1b1pMJBEaZ4"
+  },
+  {
+    "name": "ATMEGA328PB-MUR",
+    "quantity": 1,
+    "description": "Microchip - AVR 32KBYTES Flash, 1KBYTES EEPROM, 2KBYTES Ram, W - 20MHZ, Qfn/mfl, Ind Temp, Green 5 V T&r",
+    "cost": 0.606,
+    "link": "https://octopart.com/opatz8j6/a1?t=NPka4nvY0nil6WIO30DaMAjGIojwV1bHSduqaafOmXWUzlcAomoTzhPlnffD-lwvQuUZE4IzWOCimCmg_J4Yz2oqPXV-_DMMat4dLR2UjGWVas0RK4WWaZeYl9evIsnK906NbOKkSdGtE4TXeukVC66DnVOcUybGVjyInsRLAU4v7ljvWXjPd7ua8dBerIwRJtclPtNpTGzdim14dCOYQBeMB3X7-EaKLoFV26jPGEcY9i-T6XCtqiySpL_Je4RT_CliNZCd"
+  },
+  {
+    "name": "MIKROE-2032",
+    "quantity": 1,
+    "description": "mikroElektronika - PULSE Click Board | MikroElektronika MIKROE-2032",
+    "cost": 30,
+    "link": "https://octopart.com/opatz8j6/a1?t=2JrPasv8ThpKUQPA8L3_0Z1bxU3Wo1_NpC9y4lvN08n5DX-Ue3nwuaA0jBB56H-PM4TapFE3csTh3zfCyhiP9thx4NRQ_4iT81lEdZ9UE2igwGiI2oGL0WkTpV0PJPEbBnMMHf8ilr80xyyHdo_6LOs-sEAp9AYSLQz0jZDv4kP2DohxUp3fqtKF2UtYNDr2DBTBXP-iuU6jNFAebvJDx6M22rUAXC6uyLb_CcXjCR1HiDlIlA_UuOKdkB4gAVW5w1MDsYQ"
+  },
+  {
+    "name": "L7805ACV",
+    "quantity": 1,
+    "description": "STMicroelectronics - 68dB@(120Hz) 1.5A Fixed 5V Positive 35V TO-220 Linear Voltage Regulators (LDO) ROHS",
+    "cost": 0.3415,
+    "link": "https://octopart.com/opatz8j6/a1?t=guv8zrH7e0hLJGQdBVmVN7KYMZHMQ1mDpM6V5Qimg3G5zcg_ozpkn7RDm32dT7GWS1podaIGla8kv_Ml92pj0ffSLVVzgvX-KCSXbhIV1SjcizqOUjwhdwCHuSlRseLPpw9HZQEeU1CqviPkZ2vxBu_n1p__NfDJo1TLYctVXdwLYLRPKlmMgr9mehgGmFwjhGboV6siObHFhzA2MmOpA-FYj_jdk-qjtJHpLUb2Z7w3QuNiYsHywgs8JLOh7NaueARdRuSwgg"
+  }
+]
