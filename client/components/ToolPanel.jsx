@@ -103,6 +103,22 @@ const sessionUpdate = {
       },
       {
         type: "function",
+        name: "show_emoji",
+        description: "Call this function to display a large emoji on screen",
+        parameters: {
+          type: "object",
+          strict: true,
+          properties: {
+            emoji: {
+              type: "string",
+              description: "The emoji character to display",
+            },
+          },
+          required: ["type", "emoji"],
+        },
+      },
+      {
+        type: "function",
         name: "search_parts",
         description: `Call this function to search for electronic parts information such as pricing and manufacturer,
           , given the part name or MPN (Manufacturer Part Number)`,
@@ -137,8 +153,10 @@ Generally, the conversation will proceed as follows:
 1. Then you need to call the "display_questions_on_screen" function to display a couple of clarifying questions on screen to help guide the conversation.
 2. Create a block digaram of the whole project to get user's feedback.
 3. Iterate with the user to refine the block diagram until they're happy with it.
-4. Work with the user to define the circuit diagram for each functional block in the block diagram to ensure functionality.
+4. Work with the user to define the circuit diagram for each functional block in the block diagram to ensure functionality. 
+(if you ever find yourself talking about something that doesn't have a visual representation, call the "show_emoji" function to express your current thinking)
 5. Once the user is happy with the circuit diagrams, create a bill of materials for the project.
+6. Display a congratulatory emoji to the user to show that you're done.
 
 You can create circuit diagrams, functional diagrams, or bill of materials.
     `,
@@ -281,6 +299,14 @@ function MermaidChart({ chart, id }) {
   );
 }
 
+function EmojiDisplay({ emoji }) {
+  return (
+    <div className="flex flex-col gap-2 items-center justify-center">
+      <div className="text-[200px]">{emoji}</div>
+    </div>
+  );
+}
+
 function FunctionCallOutput({ functionCallOutput }) {
   const fargs =
     typeof functionCallOutput.arguments === "string"
@@ -321,6 +347,12 @@ function FunctionCallOutput({ functionCallOutput }) {
     const { questions } = data;
     return <QuestionsDisplay questions={questions} />;
   }
+
+  if (name === "show_emoji") {
+    const { emoji } = data;
+    return <EmojiDisplay emoji={emoji} />;
+  }
+
   if (name === "show_bom_list") {
     const { parts } = data;
     return (
@@ -387,6 +419,7 @@ export default function ToolPanel({
             output.name === "show_functional_diagram" ||
             output.name === "display_questions_on_screen" ||
             output.name === "show_bom_list" ||
+            output.name === "show_emoji" ||
             output.name === "search_parts")
         ) {
           setFunctionCallOutput(output);
@@ -397,11 +430,11 @@ export default function ToolPanel({
                 type: "response.create",
                 response: {
                   instructions: `
-                "Start talking to the user about the questions you just displayed.
+                "Start walking the user through the questions you just displayed. If they want to skip a question, you can skip it. If you realize you need more information, ask follow up questions. If the questions diverge significantly from the original questions update the displayed question to match the new context.
               `,
                 },
               });
-            }, 500);
+            }, 150);
           }
         }
         // if (output.type === "function_call") {
