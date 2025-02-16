@@ -2,22 +2,65 @@ import { useState } from "react";
 import { Mic, Square } from "react-feather";
 import Button from "./Button";
 
+// function StartSessionButton({ isActivating, onClick }) {
+//   return (
+//     <Button
+//       onClick={onClick}
+//       icon={<Mic height={64} />}
+//       className={`size-20 ${
+//         isActivating ? "bg-gray-600 animate-pulse" : "bg-red-600"
+//       }`}
+//       aria-label={isActivating ? "Starting session..." : "Start session"}
+//     >
+//       <span className="sr-only">
+//         {isActivating ? "Starting session..." : "Start session"}
+//       </span>
+//     </Button>
+//   );
+// }
 function StartSessionButton({ isActivating, onClick }) {
   return (
-    <Button
-      onClick={onClick}
-      icon={<Mic height={64} />}
-      className={`size-20 ${
-        isActivating ? "bg-gray-600 animate-pulse" : "bg-red-600"
-      }`}
-      aria-label={isActivating ? "Starting session..." : "Start session"}
-    >
-      <span className="sr-only">
-        {isActivating ? "Starting session..." : "Start session"}
-      </span>
-    </Button>
+    <>
+      <Button
+        onClick={onClick}
+        icon={<Mic height={64} />}
+        className={`size-20 transition-all duration-500 ease-in-out transform ${
+          isActivating
+            ? "bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 animate-organic"
+            : "bg-red-600 rounded-full"
+        }`}
+        aria-label={isActivating ? "Starting session..." : "Start session"}
+      >
+        <span className="sr-only">
+          {isActivating ? "Starting session..." : "Start session"}
+        </span>
+      </Button>
+      {/* <style jsx>{`
+        @keyframes organic {
+          0% {
+            border-radius: 50% 20% 30% 60%;
+          }
+          25% {
+            border-radius: 70% 20% 50% 40%;
+          }
+          50% {
+            border-radius: 40% 60% 30% 50%;
+          }
+          75% {
+            border-radius: 50% 30% 60% 40%;
+          }
+          100% {
+            border-radius: 50% 20% 30% 60%;
+          }
+        }
+        .animate-organic {
+          animation: organic 3s infinite;
+        }
+      `}</style> */}
+    </>
   );
 }
+
 
 function SessionStopped({ startSession }) {
   const [isActivating, setIsActivating] = useState(false);
