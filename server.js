@@ -11,7 +11,6 @@ const apiKey = process.env.OPENAI_API_KEY;
 // Add body parser middleware
 app.use(express.json());
 
-// get token for nexar api
 const PROD_TOKEN_URL = "https://identity.nexar.com/connect/token";
 const clientId = process.env.NEXAR_CLIENT_ID;
 const clientSecret = process.env.NEXAR_CLIENT_SECRET;
@@ -44,9 +43,10 @@ async function getToken(clientId, clientSecret) {
 }
 
 const TOKEN = await getToken(clientId, clientSecret);
-
-export const getNexarToken = () => TOKEN;
-export { getToken };
+// console.log(TOKEN);
+app.get('/api/token', (req, res) => {
+  res.json({ token: TOKEN });
+});
 
 // Configure Vite middleware for React client
 const vite = await createViteServer({

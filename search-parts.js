@@ -1,44 +1,40 @@
-import gql from "graphql-tag";
-import "dotenv/config";
-
-// get token for nexar api
 const PROD_TOKEN_URL = "https://identity.nexar.com/connect/token";
 const clientId = process.env.NEXAR_CLIENT_ID;
 const clientSecret = process.env.NEXAR_CLIENT_SECRET;
 const NEXAR_URL = "https://api.nexar.com/graphql"
 
-// async function getToken(clientId, clientSecret) {
-//   if (!clientId || !clientSecret) {
-//       throw new Error("clientId and/or clientSecret are empty");
-//   }
+async function getToken(clientId, clientSecret) {
+  if (!clientId || !clientSecret) {
+      throw new Error("clientId and/or clientSecret are empty");
+  }
 
-//   try {
-//       const response = await fetch(PROD_TOKEN_URL, {
-//           method: 'POST',
-//           headers: {
-//               'Content-Type': 'application/x-www-form-urlencoded',
-//           },
-//           body: new URLSearchParams({
-//               grant_type: 'client_credentials',
-//               client_id: clientId,
-//               client_secret: clientSecret
-//           }),
-//           redirect: 'manual'
-//       });
+  try {
+      const response = await fetch(PROD_TOKEN_URL, {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: new URLSearchParams({
+              grant_type: 'client_credentials',
+              client_id: clientId,
+              client_secret: clientSecret
+          }),
+          redirect: 'manual'
+      });
 
-//       const token = await response.json();
-//       return token;
-//   } catch (error) {
-//       throw error;
-//   }
-// }
+      const token = await response.json();
+      return token;
+  } catch (error) {
+      throw error;
+  }
+}
 
-// const TOKEN = await getToken(clientId, clientSecret);
+const TOKEN = await getToken(clientId, clientSecret);
 
-// console.log(TOKEN);
+console.log(TOKEN);
 
-import { getNexarToken, getToken } from '../../server.js';
-const TOKEN = getNexarToken();
+import TOKEN from './server.js'; 
+console.log(TOKEN);
 
 const SEARCH_MPN = `
   query SearchMPN($que: String!) {  
@@ -118,7 +114,7 @@ function parsePartInfo(data) {
         name: part.mpn || '',
         quantity: 1,
         description: `${part.manufacturer?.name || ''} - ${part.shortDescription || ''}`,
-        cost: offer?.prices?.[0]?.price || 0,
+        cost_per_unit: offer?.prices?.[0]?.price || 0,
         link: offer?.clickUrl || ''
     };
 }
@@ -150,7 +146,6 @@ export async function searchParts(params) {
             });
         }
     }
-
     return results;
 }
 
@@ -167,14 +162,14 @@ async function testSearch() {
             console.log(`Parsed Part Info for ${part}:`, partInfo);
             results.push(partInfo);
         }
-        // Write all results to a single JSON file
-        const fs = await import('fs');
-        const filePath = './search-results.json';
-        await fs.promises.writeFile(
-            filePath,
-            JSON.stringify(results, null, 2),
-            'utf8'
-        );
+        // // Write all results to a single JSON file
+        // const fs = await import('fs');
+        // const filePath = './search-results.json';
+        // await fs.promises.writeFile(
+        //     filePath,
+        //     JSON.stringify(results, null, 2),
+        //     'utf8'
+        // );
     } catch (error) {
         console.error('Test failed:', error);
     }
