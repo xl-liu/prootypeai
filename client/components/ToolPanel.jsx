@@ -117,6 +117,32 @@ const sessionUpdate = {
           required: ["type", "emoji"],
         },
       },
+      {
+        type: "function",
+        name: "search_parts",
+        description: `Call this function to search for electronic parts information such as pricing and manufacturer,
+          , given the part name or MPN (Manufacturer Part Number)`,
+        parameters: {
+          type: "object",
+          strict: true,
+          properties: {
+            type: {
+              type: "string",
+              enum: ["parts_search"],
+              description: "Type of search to perform",
+            },
+            parts: {
+              type: "array",
+              description: "List of parts to search for",
+              items: {
+                type: "string",
+                description: "Part name or MPN (Manufacturer Part Number)",
+              },
+            },
+          },
+          required: ["type", "parts"],
+        },
+      },
     ],
     tool_choice: "auto",
     instructions: `
@@ -280,6 +306,127 @@ function EmojiDisplay({ emoji }) {
   );
 }
 
+const SEARCH_MPN = `
+  query SearchMPN($que: String!) {  
+    supSearch(
+      q: $que        
+      start: 0
+      limit: 1 
+    ){   
+      results {      	
+        part {
+          mpn
+          genericMpn
+          manufacturer {name}
+          shortDescription
+          sellers(authorizedOnly: true) {   
+            company {name}
+            offers { 
+              packaging
+              factoryPackQuantity
+              multipackQuantity
+              inventoryLevel
+              moq
+              orderMultiple                                                   
+              prices {                
+                quantity
+                price        
+              }                            
+              clickUrl    
+            }			
+          }
+        }
+      }    
+    }
+  }
+`;
+
+async function getQuery(query=SEARCH_MPN, variables) {
+  const [token, setToken] = useState(null);
+
+  useEffect(() => {
+    fetch('/api/token')
+      .then(res => res.json())
+      .then(data => setToken(data.token))
+      .catch(console.error);
+  }, []);
+
+  try {
+      // Assuming checkExp() and token management are handled elsewhere
+      const response = await fetch(NEXAR_URL, {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'token': token.access_token
+          },
+          body: JSON.stringify({
+              query: query,
+              variables: variables
+          })
+      });
+
+      const data = await response.json();
+      
+      if ('errors' in data) {
+          data.errors.forEach(error => console.error(error.message));
+          throw new Error('GraphQL query failed');
+      }
+
+      return data.data;
+  } catch (error) {
+      console.error(error);
+      throw new Error('Error while getting Nexar response');
+  }
+}
+
+function parsePartInfo(data) {
+    if (!data?.supSearch?.results?.[0]?.part) {
+        throw new Error('No part data found');
+    }
+
+    const part = data.supSearch.results[0].part;
+    const seller = part.sellers?.[0];
+    const offer = seller?.offers?.[0];
+    
+    return {
+        name: part.mpn || '',
+        quantity: 1,
+        description: `${part.manufacturer?.name || ''} - ${part.shortDescription || ''}`,
+        cost_per_unit: offer?.prices?.[0]?.price || 0,
+        link: offer?.clickUrl || ''
+    };
+}
+
+// Export a function that matches the ToolPanel interface
+async function searchParts(params) {
+    if (params.type !== 'parts_search' || !params.parts || !params.parts.length) {
+        throw new Error('Invalid search parameters');
+    }
+
+    // Search for each part and collect results
+    const results = [];
+    for (const partName of params.parts) {
+        try {
+            const result = await getQuery(SEARCH_MPN, TOKEN, {
+                que: partName
+            });
+            const partInfo = parsePartInfo(result);
+            results.push(partInfo);
+        } catch (error) {
+            console.error(`Failed to search for part ${partName}:`, error);
+            // Add a placeholder for failed searches
+            results.push({
+                name: partName,
+                quantity: 1,
+                description: 'Part not found',
+                cost: 0,
+                link: ''
+            });
+        }
+    }
+    return results;
+}
+
 function FunctionCallOutput({ functionCallOutput }) {
   const fargs =
     typeof functionCallOutput.arguments === "string"
@@ -393,9 +540,19 @@ export default function ToolPanel({
             output.name === "show_functional_diagram" ||
             output.name === "display_questions_on_screen" ||
             output.name === "show_bom_list" ||
-            output.name === "show_emoji")
+            output.name === "show_emoji" ||
+            output.name === "search_parts")
         ) {
-          setFunctionCallOutput(output);
+          if (output.type === "function_call") {
+            if (output.name === "search_parts") {
+              (async () => {
+                const results = await searchParts(JSON.parse(output.arguments));
+                // console.log('Search results:', results);
+              })();
+            } else {
+              setFunctionCallOutput(output);
+            }
+          }
           // Make sure model responds when clarifying questions are displayed
           if (output.name === "display_questions_on_screen") {
             setTimeout(() => {
